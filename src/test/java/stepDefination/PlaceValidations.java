@@ -28,12 +28,14 @@ public class PlaceValidations extends Utils {
     RequestSpecification res;
     ResponseSpecification resspec;
     Response response;
-    MapAPITest map=new MapAPITest();
+    MapAPITest data=new MapAPITest();
+    static String place_id;
+
     @Given("Add Place Payload with {string} {string} {string}")
     public void add_Place_Payload_with(String name, String language, String address) throws IOException {
 
         res=given().spec(requestSpecification())
-                .body(map.AddPlacePayload(name,language,address));
+                .body(data.AddPlacePayload(name,language,address));
     }
     @When("User calls {string} with {string} http request")
     public void user_calls_with_http_request(String resource, String method) {
@@ -56,11 +58,28 @@ public class PlaceValidations extends Utils {
         assertEquals(response.getStatusCode(),200);
     }
     @Then("{string} in response {string}")
-    public void in_response(String key,String Evalue) {
-        String resp=response.asString();
-        JsonPath js=new JsonPath(resp);
-        assertEquals(js.get(key).toString(),Evalue);
+    public void in_response(String keyValue,String expectedvalue) {
+        assertEquals(getJsonPath(response,keyValue),expectedvalue);
 
     }
+    @Then("verify place_Id created maps to {string} using {string}")
+    public void verify_place_Id_created_maps_to_using(String expectedName, String resource) throws IOException {
+
+        // requestSpec
+        place_id=getJsonPath(response,"place_id");
+        res=given().spec(requestSpecification()).queryParam("place_id",place_id);
+        user_calls_with_http_request(resource,"GET");
+        String actualName=getJsonPath(response,"name");
+        assertEquals(actualName,expectedName);
+
+
+    }
+    @Given("DeletePlace Payload")
+    public void deleteplace_Payload() throws IOException {
+        // Write code here that turns the phrase above into concrete actions
+
+        res =given().spec(requestSpecification()).body(data.deletePlacePayload(place_id));
+    }
+
 
 }
